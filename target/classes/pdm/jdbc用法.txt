@@ -1,0 +1,31 @@
+在java中使用JdbcTemplate进行查询时，可以使用queryForXXX()等方法
+1、jdbcTemplate.queryForInt() 和 jdbcTemplate.queryForLong()
+//查询数据记录的条数，返回一个int(数据范围较小)或者一个Long（数据范围较大）类型
+String todayCountTopicsSql="SELECT count(*) FROM mcp_forum_post"; 
+Integer todayCount=jdbcTemplate.queryForInt(todayCountTopicsSql);
+也可以： Long  todayCount=jdbcTemplate.queryForLong(todayCountTopicsSql);
+2、 jdbcTemplate.queryForObject ()
+本质上和queryForInt()相同，返回都是单行单列一个数据，例如传回一个String对象：  
+String userAccountSql="select account from scpn_user where user_id="+userAccountId; 
+String userAccount=(String)jdbcTemplate.queryForObject(userAccountSql, java.lang.String.class);
+3、jdbcTemplate.queryForMap()
+查询一行数据，即一条记录，一条记录包含多个字段, 使用返回的列做key。
+String userAccountSql="select account,create_time from scpn_user where user_id="+userAccountId;
+Map userAccountMap=(Map)jdbcTemplate.queryForMap(userAccountSql);
+String userAccount= (String)userAccountMap.get("account");    //取出数据库中char类型的数据转换为String
+String createTime= (String)userAccountMap.get("create_time").toString();  //取出数据库中datetime类型的数据转换为String
+4、 jdbcTemplate.queryForList()：返回Map的集合List（它包含多条记录）, 用列名做key， 每一个map代表一条数据库记录，需要使用循环来输出每一条记录，如果想在结果集中加入一个字段，也可以采用如下的put方法。
+String all="SELECT * FROM mcp_forum_post";
+  List scpnPostList = jdbcTemplate.queryForList(all);
+if (scpnPostList!=null) {
+   for (int i = 0; i < scpnPostList.size(); i++) {
+  Long userAccountId = (Long) scpnPostList.get(i).get("user_id");
+   Long lastmodUser = (Long) scpnPostList.get(i).get("lastmod_user");
+ if (lastmodUser!=null) {
+   String lastmodUserSql="select account from scpn_user where user_id="+lastmodUser;
+   String lastmodUserAccount=(String)jdbcTemplate.queryForObject(lastmodUserSql, java.lang.String.class);
+   scpnPostList.get(i).put("lastmodUserAccount", lastmodUserAccount);//可以在结果集中插入一个字段
+  }
+
+   }
+}
